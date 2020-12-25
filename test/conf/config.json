@@ -2,10 +2,12 @@
     "encryptType": "ECDSA",
     "accounts": {
         "alice": {
+            "identity": "0x2eeb041d6723c78fab4a638be178675e8b7b4c73",
             "type": "pem",
             "value": "./accounts/alice.pem"
         },
         "bob": {
+            "identity": "0x4b83d8fb91e94a27232c531aae324abe00d849af",
             "type": "pem",
             "value": "./accounts/bob.pem"
         }

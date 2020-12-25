@@ -268,8 +268,8 @@ class Configuration {
 
             for (let id in this.accounts) {
                 if (this.accounts.hasOwnProperty(id)) {
-                    let account = '0x' + web3Utils.privateKeyToAddress(this.accounts[id].privateKey, this.encryptType).toString('hex');
-                    this.accounts[id].account = account;
+                    // let account = '0x' + web3Utils.privateKeyToAddress(this.accounts[id].privateKey, this.encryptType).toString('hex');
+                    this.accounts[id].account = config.accounts[id].identity;
                 }
             }
         }

@@ -47,6 +47,11 @@ function Transaction(data, encryptType) {
         allowLess: true,
         default: Buffer.from([])
     }, {
+        name: 'from',
+        allowZero: true,
+        length: 20,
+        default: Buffer.from([])
+    }, {
         name: 'to',
         allowZero: true,
         length: 20,
