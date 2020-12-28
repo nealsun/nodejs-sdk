@@ -55,23 +55,31 @@ class CompileService extends ServiceBase {
     /**
     * Compile a solidity contract with solc docker container
     * @param {string} contractPath Path of the contract
+    * @param {string} basePath used as import base path if specified, otherwise use contractPath's direcoty
+    * @param {Function} readCallback custom import file read
     * @param {Object} linkLibraries If you use library in your contract, please provide
     * this parameter like `{ MyLibrary: '0x123456...' }` to link contract
     */
-    compile(contractPath, linkLibraries = null) {
+    compile(contractPath, basePath = null, readCallback = null, linkLibraries = null) {
         if (this.config.solc !== null) {
-            return this._compileWithBin(contractPath, linkLibraries);
+            return this._compileWithBin(contractPath, basePath, linkLibraries);
         } else {
-            return this._compileWithSolcJS(contractPath, linkLibraries);
+            return this._compileWithSolcJS(contractPath, basePath, readCallback, linkLibraries);
         }
     }
 
-    _compileWithBin(contractPath, linkLibraries) {
+    _compileWithBin(contractPath, basePath, linkLibraries) {
         let contractName = path.basename(contractPath, '.sol');
         let solc = this.config.solc;
         let outputDir = path.join(os.tmpdir(), uuid.v4());
         let libs = [];
         let cmd;
+
+        let basePathCmd = '';
+        if (basePath !== null) {
+            basePathCmd = `--base-path ${basePath}`
+        }
+
         if (linkLibraries !== null) {
             for (let name in linkLibraries) {
                 if (linkLibraries.hasOwnProperty(name)) {
@@ -80,9 +88,9 @@ class CompileService extends ServiceBase {
             }
 
             libs = libs.join(' ');
-            cmd = `${solc} --libraries "${libs}" --overwrite --abi --bin -o ${outputDir} ${contractPath} 2>&1`;
+            cmd = `${solc} ${basePathCmd} --libraries "${libs}" --overwrite --abi --bin -o ${outputDir} ${contractPath} 2>&1`;
         } else {
-            cmd = `${solc} --overwrite --abi --bin -o ${outputDir} ${contractPath} 2>&1`;
+            cmd = `${solc} --overwrite --abi --bin ${basePathCmd} -o ${outputDir} ${contractPath} 2>&1`;
         }
 
         let output = null;
@@ -111,8 +119,12 @@ class CompileService extends ServiceBase {
         return createContractClass(contractName, abi, bin, this.config.encryptType);
     }
 
-    _compileWithSolcJS(contractPath, linkLibraries) {
+    _compileWithSolcJS(contractPath, basePath, readCallBack, linkLibraries) {
         let contractName = path.basename(contractPath, '.sol');
+
+        if (basePath === null) {
+            basePath = path.dirname(contractPath)
+        }
 
         let contractContent = fs.readFileSync(contractPath).toString();
         let solcVerReg = /pragma\s+solidity\s*(.*)\s*;/;
@@ -123,8 +135,8 @@ class CompileService extends ServiceBase {
         }
         let requiredSolcVerRange = semver.validRange(requiredSolcVer);
 
-        let readCallback = (importContractName) => {
-            let importContractPath = path.join(path.dirname(contractPath), importContractName);
+        let readCallback = readCallBack !== null ? readCallBack : (importContractName) => {
+            let importContractPath = path.join(basePath, importContractName);
             return {
                 contents: fs.readFileSync(importContractPath).toString()
             };
@@ -207,7 +219,7 @@ class CompileService extends ServiceBase {
                 }
             }
         };
-        let output = JSON.parse(solc.compile(JSON.stringify(input), readCallback));
+        let output = JSON.parse(solc.compileStandard(JSON.stringify(input), readCallback));
         this._checkContractError(output.errors, '0.5');
 
         if (!output.contracts[contractName][contractName]) {
@@ -228,28 +240,37 @@ class CompileService extends ServiceBase {
 
     _compileWithSolc0$4(solc, contractName, contractContent, readCallback) {
         let input = {
+            language: "Solidity",
             sources: {
-                [contractName]: contractContent
+                [contractName]: {
+                    content: contractContent
+                }
+            },
+            settings: {
+                outputSelection: {
+                    '*': {
+                        '*': ['abi', 'evm.bytecode']
+                    }
+                }
             }
         };
+        let output = JSON.parse(solc.compileStandard(JSON.stringify(input), readCallback));
+        this._checkContractError(output.errors, '0.4');
 
-        let output = solc.compile(input, 1, readCallback);
-        this._checkContractError(output.errors);
-
-        let qulifiedContractName = `${contractName}:${contractName}`;
-        if (!output.contracts[qulifiedContractName]) {
+        if (!output.contracts[contractName][contractName]) {
             let existKeys = [];
-            for (let key in output.contracts) {
-                if (output.contracts.hasOwnProperty(key)) {
-                    existKeys.push(key.split(':')[1]);
+            for (let key in output.contracts[contractName]) {
+                if (output.contracts[contractName].hasOwnProperty(key)) {
+                    existKeys.push(key);
                 }
             }
             throw new CompileError(`no contract found with name ${contractName}, only contracts named [${existKeys.join(', ')}] found`);
         }
 
-        let abi = output.contracts[`${contractName}:${contractName}`].interface;
-        let bin = output.contracts[`${contractName}:${contractName}`].bytecode;
-        return [abi, bin, null];
+        let abi = output.contracts[contractName][contractName].abi;
+        let bin = output.contracts[contractName][contractName].evm.bytecode.object;
+        let linkReferences = output.contracts[contractName][contractName].evm.bytecode.linkReferences;
+        return [abi, bin, linkReferences];
     }
 
     _checkContractError(errors, version = '0.4') {
@@ -275,19 +296,19 @@ class CompileService extends ServiceBase {
             let errorMsgs = [];
             errors.forEach((error, index) => {
                 let level;
-                switch (version) {
-                    case '0.4':
-                        level = error.split(': ')[1];
-                        if (solcErrors.includes(level)) {
-                            errorMsgs.push(`${index + 1}> ${error}`);
-                        }
-                        break;
-                    case '0.5':
-                        level = error.type;
-                        if (solcErrors.includes(level)) {
-                            errorMsgs.push(`${index + 1}> ${error.formattedMessage}`);
-                        }
+                // switch (version) {
+                //     case '0.4':
+                //         level = error.split(': ')[1];
+                //         if (solcErrors.includes(level)) {
+                //             errorMsgs.push(`${index + 1}> ${error}`);
+                //         }
+                //         break;
+                //     case '0.5':
+                level = error.type;
+                if (solcErrors.includes(level)) {
+                    errorMsgs.push(`${index + 1}> ${error.formattedMessage}`);
                 }
+                // }
             });
 
             if (errorMsgs.length !== 0) {
