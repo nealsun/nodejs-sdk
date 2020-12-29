@@ -28,17 +28,23 @@ describe('test for read callback', function () {
         const v4RootPath = path.join(__dirname, './contracts/v4')
         const contractPath = path.join(__dirname, './contracts/v4/inner/Inner.sol');
         let contractClass = compileService.compile(contractPath, v4RootPath);
-        // let contractClass = compileService.compile(contractPath, (importContractName) => {
-        //     let importContractPath = path.join(v4RootPath, importContractName);
-        //     return {
-        //         contents: fs.readFileSync(importContractPath).toString()
-        //     };
-        // });
+
         let callLibrary = contractClass.newInstance();
 
         try {
-            let _ = await callLibrary.$deploy(web3jService);
-            should.equal(true, false);
+            let address = await callLibrary.$deploy(web3jService);
+            should.exist(address);
+            await callLibrary["set(string)"]('こんにちわ！');
+
+            const ret1 = await callLibrary.getName();
+            should.exist(ret1)
+            should.equal(ret1[0], 'こんにちわ！');
+
+            await callLibrary.set('Hello World!');
+
+            const ret2= await callLibrary.getName();
+            should.exist(ret2)
+            should.equal(ret2[0], 'Hello World!');
         } catch (_) { }
     });
 
@@ -54,8 +60,13 @@ describe('test for read callback', function () {
         let callLibrary = contractClass.newInstance();
 
         try {
-            let _ = await callLibrary.$deploy(web3jService);
-            should.equal(true, false);
+            let address = await callLibrary.$deploy(web3jService);
+            should.exist(address);
+            await callLibrary.set(1234);
+
+            const ret = await callLibrary.getValue();
+            should.exist(ret)
+            should.equal(ret[0], 1234);
         } catch (_) { }
     });
 
@@ -63,12 +74,7 @@ describe('test for read callback', function () {
         const v4RootPath = path.join(__dirname, './contracts/v5')
         const contractPath = path.join(__dirname, './contracts/v5/inner/Inner.sol');
         let contractClass = compileService.compile(contractPath, v4RootPath);
-        // let contractClass = compileService.compile(contractPath, (importContractName) => {
-        //     let importContractPath = path.join(v4RootPath, importContractName);
-        //     return {
-        //         contents: fs.readFileSync(importContractPath).toString()
-        //     };
-        // });
+
         let callLibrary = contractClass.newInstance();
 
         try {

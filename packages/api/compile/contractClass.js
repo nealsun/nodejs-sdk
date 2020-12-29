@@ -190,28 +190,41 @@ function createContractClass(name, abi, bin, encryptType) {
 
                 switch (item.type) {
                     case 'function': {
-                        if (contract._functionABIMapper.has(contract[item.name])) {
-                            throw new Error('function override is not allowed');
-                        }
-
                         const iface = new ethers.utils.Interface([item]);
                         const func = iface.functions[item.name];
 
-                        contract._functionABIMapper.set(item.name, {
+                        if (contract._functionABIMapper.has(contract[func.signature])) {
+                            throw new Error('function override is not allowed');
+                        }
+
+                        contract._functionABIMapper.set(func.signature, {
                             abi: item,
                             decoder: createMethodDecoder(item, null),
                             meta: func
                         });
+                        if (!contract._functionABIMapper.has(func.name)) {
+                            contract._functionABIMapper.set(func.name, {
+                                abi: item,
+                                decoder: createMethodDecoder(item, null),
+                                meta: func
+                            });
+                        }
 
                         let parameters = item.inputs.map((input) => input.name);
 
                         if (item.constant) {
-                            contract[item.name] = new Function(parameters, createCodeForConstantMethod(item.name));
+                            contract[func.signature] = new Function(parameters, createCodeForConstantMethod(func.signature));
+                            if (contract[func.name] === undefined) {
+                                contract[func.name] = contract[func.signature];
+                            }
                         } else {
-                            contract[item.name] = new Function(parameters, createCodeForMutableMethod(item.name));
+                            contract[func.signature] = new Function(parameters, createCodeForMutableMethod(func.signature));
+                            if (contract[func.name] === undefined) {
+                                contract[func.name] = contract[func.signature];
+                            }
                         }
 
-                        Object.defineProperty(contract[item.name], 'encodeABI', {
+                        Object.defineProperty(contract[func.signature], 'encodeABI', {
                             value: (params = []) => {
                                 return getTxData(func, params, encryptType);
                             },
