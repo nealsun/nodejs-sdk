@@ -31,21 +31,19 @@ describe('test for read callback', function () {
 
         let callLibrary = contractClass.newInstance();
 
-        try {
-            let address = await callLibrary.$deploy(web3jService);
-            should.exist(address);
-            await callLibrary["set(string)"]('こんにちわ！');
+        let address = await callLibrary.$deploy(web3jService);
+        should.exist(address);
+        await callLibrary["set(string,int256)"]('こんにちわ！', 23456);
 
-            const ret1 = await callLibrary.getName();
-            should.exist(ret1)
-            should.equal(ret1[0], 'こんにちわ！');
+        const ret1 = await callLibrary.getName();
+        should.exist(ret1)
+        should.equal(ret1[0], 'こんにちわ！');
 
-            await callLibrary.set('Hello World!');
+        // await callLibrary.set('Hello World!');
 
-            const ret2= await callLibrary.getName();
-            should.exist(ret2)
-            should.equal(ret2[0], 'Hello World!');
-        } catch (_) { }
+        const ret2= await callLibrary.getValue();
+        should.exist(ret2)
+        should.equal(ret2[0], 23456);
     });
 
     it('v4 with read callback', async () => {
@@ -59,15 +57,13 @@ describe('test for read callback', function () {
         });
         let callLibrary = contractClass.newInstance();
 
-        try {
-            let address = await callLibrary.$deploy(web3jService);
-            should.exist(address);
-            await callLibrary.set(1234);
+        let address = await callLibrary.$deploy(web3jService);
+        should.exist(address);
+        await callLibrary['set(int256)'](1234);
 
-            const ret = await callLibrary.getValue();
-            should.exist(ret)
-            should.equal(ret[0], 1234);
-        } catch (_) { }
+        const ret = await callLibrary.getValue();
+        should.exist(ret)
+        should.equal(ret[0], 1234);
     });
 
     it('v5 with root path', async () => {
@@ -77,10 +73,14 @@ describe('test for read callback', function () {
 
         let callLibrary = contractClass.newInstance();
 
-        try {
-            let _ = await callLibrary.$deploy(web3jService);
-            should.equal(true, false);
-        } catch (_) { }
+        let _ = await callLibrary.$deploy(web3jService);
+        should.equal(true, true);
+
+        await callLibrary.setMap(1234, 2345, 5678);
+
+        const ret = await callLibrary.param(1234, 2345);
+        should.exist(ret)
+        should.equal(ret[0], 5678);
     });
 
     it('v5 with read callback', async () => {
@@ -94,9 +94,7 @@ describe('test for read callback', function () {
         });
         let callLibrary = contractClass.newInstance();
 
-        try {
-            let _ = await callLibrary.$deploy(web3jService);
-            should.equal(true, false);
-        } catch (_) { }
+        let _ = await callLibrary.$deploy(web3jService);
+        should.equal(true, true);
     });
 });

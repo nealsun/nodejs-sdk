@@ -213,12 +213,12 @@ function createContractClass(name, abi, bin, encryptType) {
                         let parameters = item.inputs.map((input) => input.name);
 
                         if (item.constant) {
-                            contract[func.signature] = new Function(parameters, createCodeForConstantMethod(func.signature));
+                            contract[func.signature] = new Function('', createCodeForConstantMethod(func.signature));
                             if (contract[func.name] === undefined) {
                                 contract[func.name] = contract[func.signature];
                             }
                         } else {
-                            contract[func.signature] = new Function(parameters, createCodeForMutableMethod(func.signature));
+                            contract[func.signature] = new Function('', createCodeForMutableMethod(func.signature));
                             if (contract[func.name] === undefined) {
                                 contract[func.name] = contract[func.signature];
                             }
