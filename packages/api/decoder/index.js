@@ -116,6 +116,8 @@ class MethodDecoder {
     }
 }
 
+module.exports.MethodDecoder = MethodDecoder;
+
 class EventDecoder {
     constructor(event, encryptType) {
         this.event = event;
@@ -158,6 +160,8 @@ class EventDecoder {
         return values;
     }
 }
+
+module.exports.EventDecoder = EventDecoder;
 
 module.exports.createMethodDecoder = function (abi, name) {
     if (name === null) {

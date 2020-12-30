@@ -22,7 +22,7 @@ const rlp = require('rlp');
 const ethjsUtil = require('ethjs-util');
 const smCrypto = require('./sm_crypto/SM2Sign');
 const EC = require('elliptic').ec;
-
+const ethereumjsUtil = require('ethereumjs-util');
 // To prevent circular dependency problem between `configuration` 
 // and `web3lib/utils`, please import `ENCRYPT_TYPE` directly via 
 // `require('../configuration/constant').ENCRYPT_TYPE`,
@@ -212,6 +212,14 @@ function rlphash(data, encryptType) {
     return sha3(rlp.encode(data), null, encryptType);
 }
 
+function signRlp(sig, encryptType) {
+    if (encryptType === ENCRYPT_TYPE.SM_CRYPTO) {
+        return rlp.encode([sig.pub, ethereumjsUtil.stripZeros(sig.r), ethereumjsUtil.stripZeros(sig.s)]);
+    } else if (encryptType === ENCRYPT_TYPE.ECDSA) {
+        return rlp.encode([sig.v, ethereumjsUtil.stripZeros(sig.r), ethereumjsUtil.stripZeros(sig.s)]);
+    }
+}
+
 function hash(str, encryptType) {
     if (encryptType === ENCRYPT_TYPE.SM_CRYPTO) {
         return sha3(str, 256, encryptType).toString('hex');
@@ -271,6 +279,7 @@ module.exports.rlphash = rlphash;
 module.exports.ecrecover = ecrecover;
 module.exports.ecsign = ecsign;
 module.exports.sha3 = sha3;
+module.exports.signRlp = signRlp;
 module.exports.toBuffer = toBuffer;
 
 module.exports.hash = hash;

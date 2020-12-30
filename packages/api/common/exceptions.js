@@ -53,3 +53,12 @@ class CompileError extends Error {
     }
 }
 module.exports.CompileError = CompileError;
+
+
+class BaasError extends Error {
+    constructor(msg) {
+        super(msg);
+        this.name = 'BaasError';
+    }
+}
+module.exports.BaasError = BaasError;

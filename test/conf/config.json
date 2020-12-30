@@ -23,6 +23,16 @@
         "cert": "./authentication/sdk.crt",
         "ca": "./authentication/ca.crt"
     },
+    "baas": {
+        "orgId": "13",
+        "baseUrl": "http://192.168.127.15:8087/",
+        "sdkVersion": "1.0.0",
+        "privateKey":  {
+            "identity": "0x1111c388807ad1fd5d22f474b32b82e504def6c8",
+            "type": "pem",
+            "value": "./authentication/0x1111c388807ad1fd5d22f474b32b82e504def6c8.pem"
+        }
+    },
     "groupID": 1,
     "chainID": 1,
     "timeout": 10000

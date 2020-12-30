@@ -31,6 +31,8 @@ module.exports.ConditionOp = require('./precompiled/crud').ConditionOp;
 
 module.exports.CompileService = require('./compile').CompileService;
 
+module.exports.BaasService = require('./baas').BaasService;
+
 module.exports.Configuration = require('./common/configuration').Configuration;
 module.exports.ENCRYPT_TYPE = require('./common/configuration').ENCRYPT_TYPE;
 

@@ -73,6 +73,8 @@ class Configuration {
         this._parseTimeout(config);
         this._parseSolc(config);
         this._parseAccounts(config);
+        this._parseBaas(config);
+
     }
 
     _parseAuthentication(config) {
@@ -272,6 +274,34 @@ class Configuration {
                     this.accounts[id].account = config.accounts[id].identity;
                 }
             }
+        }
+    }
+
+    _parseBaas(config) {
+        if (config.baas) {
+            this.baas = {}
+            if (config.baas.hasOwnProperty('baseUrl')) {
+                if (typeof config.baas.baseUrl !== 'string') {
+                    throw new ConfigurationError('invalid `baas.baseUrl` property');
+                } else {
+                    this.baas.baseUrl = config.baas.baseUrl;
+                }
+            } else {
+                throw new ConfigurationError('should contain `baas.baseUrl` property');
+            }
+
+            if (config.baas.hasOwnProperty('orgId')) {
+                if (typeof config.baas.orgId !== 'string') {
+                    throw new ConfigurationError('invalid `baas.orgId` property');
+                } else {
+                    this.baas.orgId = config.baas.orgId;
+                }
+            } else {
+                throw new ConfigurationError('should contain `baas.orgId` property');
+            }
+
+            this.baas.privateKey = this._parsePrivateKey(config.baas.privateKey)
+            this.baas.identity = config.baas.privateKey.identity
         }
     }
 }
