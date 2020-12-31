@@ -1,22 +1,23 @@
 {
-    "name": "nodejs-sdk",
+    "name": "llc-nodejs-sdk",
     "version": "1.0.0",
-    "description": "Node.js sdk for FISCO BCOS",
+    "description": "Node.js sdk for LianLian Cross",
     "keywords": [
-        "FISCO BCOS"
+        "LianLian",
+        "Cross"
     ],
-    "homepage": "https://github.com/FISCO-BCOS/nodejs-sdk",
-    "bugs": "https://github.com/FISCO-BCOS/nodejs-sdk/issues",
+    "homepage": "https://github.com/nealsun/nodejs-sdk",
+    "bugs": "https://github.com/nealsun/nodejs-sdk/issues",
     "authors": {
-        "name": "Li Chenxi",
-        "email": "lichenxi.webank@gmail.com",
-        "url": "https://github.com/vita-dounai"
+        "name": "Aaron",
+        "email": "sunwr@lianlianpay.com",
+        "url": ""
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/FISCO-BCOS/nodejs-sdk.git"
+        "url": "https://github.com/nealsun/nodejs-sdk.git"
     },
-    "author": "catli",
+    "author": "Aaron",
     "engineStrict": true,
     "engines": {
         "node": ">=8.10.0",
